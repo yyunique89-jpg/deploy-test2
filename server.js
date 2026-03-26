@@ -93,7 +93,19 @@ app.post('/api/past-life', async (req, res) => {
       return res.status(400).json({ error: '이름을 입력해주세요.' });
     }
 
-    const pastLife = generatePastLife();
+    // 이스터에그: 장형윤 전용 고정 결과
+    const easterEggs = {
+      '장형윤': {
+        name: '대륙을 지배한 전설의 무역왕',
+        category: 'human',
+        era: '르네상스',
+        year: 0,
+        yearStr: '1495년',
+        death: '온 세상의 존경을 받으며 평화롭게 생을 마감'
+      }
+    };
+
+    const pastLife = easterEggs[userName.trim()] || generatePastLife();
 
     const prompt = `당신은 전생을 읽어주는 신비로운 점술가입니다. 아래 정보를 바탕으로 재미있고 흥미진진한 전생 스토리를 만들어주세요.
 한국어로 작성하며, 유머러스하면서도 극적인 이야기를 200자~350자 내외로 작성해주세요.
