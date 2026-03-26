@@ -514,7 +514,10 @@
           body: JSON.stringify({ userName: name }),
         });
 
-        if (!res.ok) throw new Error('서버 오류');
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.debug || errData.error || '서버 오류');
+        }
 
         currentResult = await res.json();
 
@@ -531,7 +534,7 @@
       } catch (err) {
         document.getElementById('loading').classList.remove('active');
         document.getElementById('inputSection').style.display = 'block';
-        showToast('오류가 발생했습니다. 다시 시도해주세요.');
+        showToast('오류: ' + err.message);
         console.error(err);
       }
     }

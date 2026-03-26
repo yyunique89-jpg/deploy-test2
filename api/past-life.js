@@ -136,6 +136,10 @@ module.exports = async function handler(req, res) {
     });
   } catch (error) {
     console.error('Error:', error);
-    res.status(500).json({ error: '전생을 읽는 중 오류가 발생했습니다. 다시 시도해주세요.' });
+    res.status(500).json({
+      error: '전생을 읽는 중 오류가 발생했습니다. 다시 시도해주세요.',
+      debug: error.message,
+      hasKey: !!process.env.OPENAI_API_KEY
+    });
   }
 };
