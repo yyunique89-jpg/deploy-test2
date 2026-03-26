@@ -1,6 +1,6 @@
 const OpenAI = require('openai');
-const occupations = require('../data/occupations.json');
-const deaths = require('../data/deaths.json');
+const occupations = require('./occupations.json');
+const deaths = require('./deaths.json');
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
