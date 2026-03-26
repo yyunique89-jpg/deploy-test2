@@ -2,10 +2,7 @@
   "name": "past-life-reader",
   "version": "1.0.0",
   "description": "전생 알아보기 서비스",
-  "scripts": {
-    "start": "node server.js",
-    "dev": "node server.js"
-  },
+  "private": true,
   "dependencies": {
     "openai": "^4.72.0"
   }
