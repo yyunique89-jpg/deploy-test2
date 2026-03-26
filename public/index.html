@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🔮 전생 알아보기</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;700;900&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #0c0020 0%, #1a0040 30%, #2d1b69 60%, #0c0020 100%);
+      color: #e0d0ff;
+      overflow-x: hidden;
+    }
+
+    /* Floating particles */
+    .particles {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .particle {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(180, 130, 255, 0.3);
+      animation: float linear infinite;
+    }
+    @keyframes float {
+      0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+      10% { opacity: 1; }
+      90% { opacity: 1; }
+      100% { transform: translateY(-10vh) rotate(720deg); opacity: 0; }
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 520px;
+      margin: 0 auto;
+      padding: 40px 20px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    .header .crystal-ball {
+      font-size: 80px;
+      display: block;
+      margin-bottom: 16px;
+      animation: glow 3s ease-in-out infinite;
+    }
+    @keyframes glow {
+      0%, 100% { filter: drop-shadow(0 0 20px rgba(180, 130, 255, 0.5)); }
+      50% { filter: drop-shadow(0 0 40px rgba(180, 130, 255, 0.9)); }
+    }
+    .header h1 {
+      font-size: 32px;
+      font-weight: 900;
+      background: linear-gradient(135deg, #c9a0ff, #ff9de2, #c9a0ff);
+      background-size: 200% 200%;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: shimmer 3s ease-in-out infinite;
+    }
+    @keyframes shimmer {
+      0%, 100% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+    }
+    .header p {
+      margin-top: 8px;
+      font-size: 14px;
+      color: #a08ecf;
+      font-weight: 300;
+    }
+
+    /* Input Section */
+    .input-section {
+      width: 100%;
+      text-align: center;
+    }
+    .input-wrapper {
+      position: relative;
+      margin-bottom: 20px;
+    }
+    .input-wrapper input {
+      width: 100%;
+      padding: 18px 24px;
+      font-size: 18px;
+      font-family: 'Noto Sans KR', sans-serif;
+      border: 2px solid rgba(180, 130, 255, 0.3);
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.05);
+      color: #fff;
+      outline: none;
+      transition: all 0.3s;
+      text-align: center;
+    }
+    .input-wrapper input::placeholder {
+      color: rgba(180, 160, 220, 0.5);
+    }
+    .input-wrapper input:focus {
+      border-color: rgba(180, 130, 255, 0.8);
+      box-shadow: 0 0 30px rgba(180, 130, 255, 0.2);
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .btn-submit {
+      width: 100%;
+      padding: 18px;
+      font-size: 18px;
+      font-weight: 700;
+      font-family: 'Noto Sans KR', sans-serif;
+      border: none;
+      border-radius: 16px;
+      background: linear-gradient(135deg, #7c3aed, #a855f7, #c084fc);
+      color: #fff;
+      cursor: pointer;
+      transition: all 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+    .btn-submit:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 40px rgba(124, 58, 237, 0.4);
+    }
+    .btn-submit:active { transform: translateY(0); }
+    .btn-submit:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* Loading */
+    .loading {
+      display: none;
+      text-align: center;
+      padding: 60px 20px;
+    }
+    .loading.active { display: block; }
+    .loading .spinner {
+      width: 60px; height: 60px;
+      margin: 0 auto 24px;
+      border: 3px solid rgba(180, 130, 255, 0.2);
+      border-top-color: #a855f7;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading p {
+      font-size: 16px;
+      color: #c9a0ff;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 0.5; }
+      50% { opacity: 1; }
+    }
+
+    /* Result Card */
+    .result-card {
+      display: none;
+      width: 100%;
+      margin-top: 10px;
+      animation: fadeUp 0.6s ease-out;
+    }
+    .result-card.active { display: block; }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(180, 130, 255, 0.2);
+      border-radius: 24px;
+      padding: 32px 24px;
+      backdrop-filter: blur(10px);
+    }
+
+    .card-header {
+      text-align: center;
+      margin-bottom: 24px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid rgba(180, 130, 255, 0.15);
+    }
+    .card-header .user-name {
+      font-size: 14px;
+      color: #a08ecf;
+      margin-bottom: 4px;
+    }
+    .card-header h2 {
+      font-size: 22px;
+      font-weight: 900;
+      color: #e8d5ff;
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .info-item {
+      background: rgba(180, 130, 255, 0.08);
+      border-radius: 12px;
+      padding: 14px;
+      text-align: center;
+    }
+    .info-item .label {
+      font-size: 11px;
+      color: #a08ecf;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 6px;
+    }
+    .info-item .value {
+      font-size: 14px;
+      font-weight: 700;
+      color: #e0d0ff;
+      word-break: keep-all;
+    }
+    .info-item.full {
+      grid-column: 1 / -1;
+    }
+
+    .story-section {
+      margin-bottom: 24px;
+    }
+    .story-section h3 {
+      font-size: 14px;
+      color: #c9a0ff;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .story-text {
+      font-size: 15px;
+      line-height: 1.8;
+      color: #d8c8f0;
+      font-weight: 300;
+      white-space: pre-wrap;
+    }
+
+    /* Buttons */
+    .action-buttons {
+      display: flex;
+      gap: 12px;
+      margin-top: 8px;
+    }
+    .btn-action {
+      flex: 1;
+      padding: 14px;
+      font-size: 14px;
+      font-weight: 700;
+      font-family: 'Noto Sans KR', sans-serif;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    .btn-retry {
+      background: rgba(180, 130, 255, 0.15);
+      color: #c9a0ff;
+      border: 1px solid rgba(180, 130, 255, 0.3);
+    }
+    .btn-retry:hover {
+      background: rgba(180, 130, 255, 0.25);
+    }
+    .btn-share {
+      background: linear-gradient(135deg, #7c3aed, #a855f7);
+      color: #fff;
+    }
+    .btn-share:hover {
+      box-shadow: 0 6px 20px rgba(124, 58, 237, 0.4);
+      transform: translateY(-1px);
+    }
+
+    /* Share Toast */
+    .toast {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: rgba(124, 58, 237, 0.95);
+      color: #fff;
+      padding: 14px 28px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 500;
+      z-index: 100;
+      transition: transform 0.3s ease;
+      backdrop-filter: blur(10px);
+    }
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* Share Modal */
+    .share-modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 50;
+      justify-content: center;
+      align-items: center;
+    }
+    .share-modal-overlay.active {
+      display: flex;
+    }
+    .share-modal {
+      background: #1a0040;
+      border: 1px solid rgba(180, 130, 255, 0.3);
+      border-radius: 20px;
+      padding: 28px;
+      width: 90%;
+      max-width: 400px;
+      text-align: center;
+    }
+    .share-modal h3 {
+      font-size: 18px;
+      margin-bottom: 20px;
+      color: #e0d0ff;
+    }
+    .share-options {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .share-btn {
+      padding: 14px;
+      border: none;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 600;
+      font-family: 'Noto Sans KR', sans-serif;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .share-btn:hover { transform: translateY(-1px); }
+    .share-kakao { background: #FEE500; color: #3C1E1E; }
+    .share-twitter { background: #1DA1F2; color: #fff; }
+    .share-copy { background: rgba(180, 130, 255, 0.2); color: #c9a0ff; border: 1px solid rgba(180, 130, 255, 0.3); }
+    .share-close {
+      margin-top: 8px;
+      background: transparent;
+      color: #a08ecf;
+      border: 1px solid rgba(180, 130, 255, 0.2);
+    }
+
+    .footer {
+      margin-top: auto;
+      padding-top: 40px;
+      text-align: center;
+      font-size: 12px;
+      color: rgba(160, 142, 207, 0.5);
+    }
+  </style>
+</head>
+<body>
+  <!-- Particles -->
+  <div class="particles" id="particles"></div>
+
+  <div class="container">
+    <div class="header">
+      <span class="crystal-ball">🔮</span>
+      <h1>전생 알아보기</h1>
+      <p>당신의 이름으로 전생의 비밀을 밝혀보세요</p>
+    </div>
+
+    <!-- Input -->
+    <div class="input-section" id="inputSection">
+      <div class="input-wrapper">
+        <input type="text" id="nameInput" placeholder="이름을 입력하세요" maxlength="20" autocomplete="off">
+      </div>
+      <button class="btn-submit" id="submitBtn" onclick="getPastLife()">전생 알아보기 ✨</button>
+    </div>
+
+    <!-- Loading -->
+    <div class="loading" id="loading">
+      <div class="spinner"></div>
+      <p>전생의 기억을 불러오는 중...</p>
+    </div>
+
+    <!-- Result -->
+    <div class="result-card" id="resultCard">
+      <div class="card">
+        <div class="card-header">
+          <div class="user-name" id="resultUserName"></div>
+          <h2 id="resultTitle"></h2>
+        </div>
+
+        <div class="info-grid">
+          <div class="info-item">
+            <div class="label">⏰ 시대</div>
+            <div class="value" id="resultEra"></div>
+          </div>
+          <div class="info-item">
+            <div class="label">📅 년도</div>
+            <div class="value" id="resultYear"></div>
+          </div>
+          <div class="info-item">
+            <div class="label">💀 사인</div>
+            <div class="value" id="resultDeath"></div>
+          </div>
+          <div class="info-item">
+            <div class="label">🏷️ 분류</div>
+            <div class="value" id="resultCategory"></div>
+          </div>
+        </div>
+
+        <div class="story-section">
+          <h3>📜 전생 스토리</h3>
+          <div class="story-text" id="resultStory"></div>
+        </div>
+
+        <div class="action-buttons">
+          <button class="btn-action btn-retry" onclick="retry()">다시하기 🔄</button>
+          <button class="btn-action btn-share" onclick="openShareModal()">공유하기 📤</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      ※ 이 결과는 재미를 위한 것이며 실제 전생과 무관합니다 😉
+    </div>
+  </div>
+
+  <!-- Share Modal -->
+  <div class="share-modal-overlay" id="shareModal">
+    <div class="share-modal">
+      <h3>결과 공유하기</h3>
+      <div class="share-options">
+        <button class="share-btn share-kakao" onclick="shareKakao()">카카오톡으로 공유</button>
+        <button class="share-btn share-twitter" onclick="shareTwitter()">X(트위터)로 공유</button>
+        <button class="share-btn share-copy" onclick="copyResult()">텍스트 복사하기</button>
+        <button class="share-btn share-close" onclick="closeShareModal()">닫기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // Generate particles
+    const particlesEl = document.getElementById('particles');
+    for (let i = 0; i < 30; i++) {
+      const p = document.createElement('div');
+      p.className = 'particle';
+      const size = Math.random() * 4 + 2;
+      p.style.width = size + 'px';
+      p.style.height = size + 'px';
+      p.style.left = Math.random() * 100 + '%';
+      p.style.animationDuration = (Math.random() * 15 + 10) + 's';
+      p.style.animationDelay = (Math.random() * 10) + 's';
+      particlesEl.appendChild(p);
+    }
+
+    let currentResult = null;
+
+    const nameInput = document.getElementById('nameInput');
+    nameInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') getPastLife();
+    });
+
+    const categoryLabels = {
+      human: '👤 인간',
+      fantasy: '🧙 판타지',
+      animal: '🐾 동물',
+      object: '🪨 무생물',
+      microbe: '🦠 미생물',
+      alien: '👽 외계인',
+      plant: '🌿 식물'
+    };
+
+    async function getPastLife() {
+      const name = nameInput.value.trim();
+      if (!name) {
+        nameInput.focus();
+        nameInput.style.borderColor = '#ff6b6b';
+        setTimeout(() => nameInput.style.borderColor = '', 1000);
+        return;
+      }
+
+      document.getElementById('inputSection').style.display = 'none';
+      document.getElementById('resultCard').classList.remove('active');
+      document.getElementById('loading').classList.add('active');
+
+      try {
+        const res = await fetch('/api/past-life', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userName: name }),
+        });
+
+        if (!res.ok) throw new Error('서버 오류');
+
+        currentResult = await res.json();
+
+        document.getElementById('resultUserName').textContent = `${currentResult.userName}님의 전생`;
+        document.getElementById('resultTitle').textContent = currentResult.occupation;
+        document.getElementById('resultEra').textContent = currentResult.era;
+        document.getElementById('resultYear').textContent = currentResult.year;
+        document.getElementById('resultDeath').textContent = currentResult.death;
+        document.getElementById('resultCategory').textContent = categoryLabels[currentResult.category] || currentResult.category;
+        document.getElementById('resultStory').textContent = currentResult.story;
+
+        document.getElementById('loading').classList.remove('active');
+        document.getElementById('resultCard').classList.add('active');
+      } catch (err) {
+        document.getElementById('loading').classList.remove('active');
+        document.getElementById('inputSection').style.display = 'block';
+        showToast('오류가 발생했습니다. 다시 시도해주세요.');
+        console.error(err);
+      }
+    }
+
+    function retry() {
+      document.getElementById('resultCard').classList.remove('active');
+      document.getElementById('inputSection').style.display = 'block';
+      nameInput.value = '';
+      nameInput.focus();
+    }
+
+    function openShareModal() {
+      document.getElementById('shareModal').classList.add('active');
+    }
+    function closeShareModal() {
+      document.getElementById('shareModal').classList.remove('active');
+    }
+
+    function getShareText() {
+      if (!currentResult) return '';
+      return `🔮 전생 알아보기 결과\n\n` +
+        `이름: ${currentResult.userName}\n` +
+        `시대: ${currentResult.era} (${currentResult.year})\n` +
+        `전생: ${currentResult.occupation}\n` +
+        `사인: ${currentResult.death}\n\n` +
+        `${currentResult.story}\n\n` +
+        `나도 전생 알아보기 👉`;
+    }
+
+    function shareKakao() {
+      const text = getShareText();
+      const url = `https://story.kakao.com/share?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(text)}`;
+      window.open(url, '_blank', 'width=600,height=400');
+      closeShareModal();
+    }
+
+    function shareTwitter() {
+      const text = getShareText().substring(0, 280);
+      const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
+      window.open(url, '_blank', 'width=600,height=400');
+      closeShareModal();
+    }
+
+    function copyResult() {
+      const text = getShareText();
+      navigator.clipboard.writeText(text).then(() => {
+        closeShareModal();
+        showToast('결과가 클립보드에 복사되었습니다!');
+      }).catch(() => {
+        // Fallback
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        closeShareModal();
+        showToast('결과가 클립보드에 복사되었습니다!');
+      });
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2500);
+    }
+
+    // Click outside modal to close
+    document.getElementById('shareModal').addEventListener('click', (e) => {
+      if (e.target === document.getElementById('shareModal')) closeShareModal();
+    });
+  </script>
+</body>
+</html>
